@@ -6,6 +6,7 @@ import dao.annotations_dao.PrimaryKey;
 import dao.annotations_dao.Table;
 import org.apache.log4j.Logger;
 
+import java.lang.reflect.ParameterizedType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +20,7 @@ public abstract class AbstractDAO<T, K> {
     private static Logger log = Logger.getLogger(CountryDAO.class);
 
 
-    protected String getTableName (Class<T> clazz){
+    protected String getTableName(Class<T> clazz) {
         String nameOfTable = "";
         if (clazz.isAnnotationPresent(Table.class)) {
             nameOfTable = clazz.getAnnotation(Table.class).tableName();
@@ -29,13 +30,13 @@ public abstract class AbstractDAO<T, K> {
 
     public abstract T getByKey(K key);
 
-    protected T getByKey(K key, T foundObject){
-        Class<T> foundObjectClass = (Class<T>)foundObject.getClass();
+    protected T getByKey(K key, T foundObject) {
+        Class<T> foundObjectClass = (Class<T>) foundObject.getClass();
         String nameOfTable = getTableName(foundObjectClass);
         String primaryKey = Stream.of(foundObjectClass.getDeclaredFields())
-                .filter(f-> f.isAnnotationPresent(PrimaryKey.class))
+                .filter(f -> f.isAnnotationPresent(PrimaryKey.class))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Primary Key is not found in %s class",foundObjectClass.getName())))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Primary Key is not found in %s class", foundObjectClass.getName())))
                 .getAnnotation(Field.class).columnName();
         String sql = String.format("SELECT * FROM %s WHERE %s = '%s'", nameOfTable, primaryKey, key);
 
@@ -58,10 +59,9 @@ public abstract class AbstractDAO<T, K> {
         return foundObject;
     }
 
-    public abstract List<T> getAll();
-
-    protected List<T> getAll (Class<T> clazz){
-        String nameOfTable = getTableName(clazz);
+    public List<T> getAll() {
+        Class<T> beanClass = getBeanClass();
+        String nameOfTable = getTableName(beanClass);
         String sql = String.format("SELECT * FROM %s", nameOfTable);
         List<T> beanObjectsList = new LinkedList<T>();
 
@@ -69,7 +69,7 @@ public abstract class AbstractDAO<T, K> {
             ResultSet rs = stmnt.executeQuery(sql);
 
             try {
-                beanObjectsList = new MappingManager().mappingRows(rs, clazz);
+                beanObjectsList = new MappingManager().mappingRows(rs, beanClass);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } catch (InstantiationException e) {
@@ -79,47 +79,41 @@ public abstract class AbstractDAO<T, K> {
             System.out.println(e.getMessage());
         }
         return beanObjectsList;
-    };
-
-    public abstract void insert(T value);
-
-    protected void insert(T value, Class<T> clazz) {
-        {
-            String nameOfTable = getTableName(clazz);
-            List<String> columnsNames = new LinkedList<>();
-            List<String> values = new LinkedList<>();
-            for (java.lang.reflect.Field f : clazz.getDeclaredFields()) {
-                if (f.isAnnotationPresent(Field.class)) {
-                    columnsNames.add(f.getAnnotation(Field.class).columnName());
-                    values.add(String.format("'%s'", getFieldValueFromObj(f, value).toString()));
-                }
-            }
-
-            log.info("Insertion started");
-            String sql = String.format("INSERT INTO %s (%s) VALUES(%s)", nameOfTable,
-                    String.join(",", columnsNames),
-                    String.join(",", values));
-            try (PreparedStatement pstmt = ConnectionProvider.get(URL).prepareStatement(sql)) {
-                pstmt.executeUpdate();
-            } catch (SQLException e) {
-                log.error("error took place while executing the command", e);
-
-            }
-
-        }
-
-
     }
 
-    public abstract void delete (K key);
+    ;
 
+    public void insert(T value) {
+        Class<T> beanClass = getBeanClass();
+        String nameOfTable = getTableName(beanClass);
+        List<String> columnsNames = new LinkedList<>();
+        List<String> values = new LinkedList<>();
+        for (java.lang.reflect.Field f : beanClass.getDeclaredFields()) {
+            if (f.isAnnotationPresent(Field.class)) {
+                columnsNames.add(f.getAnnotation(Field.class).columnName());
+                values.add(String.format("'%s'", getFieldValueFromObj(f, value).toString()));
+            }
+        }
 
-    protected void delete(K key, Class<T> clazz) {
+        log.info("Insertion started");
+        String sql = String.format("INSERT INTO %s (%s) VALUES(%s)", nameOfTable,
+                String.join(",", columnsNames),
+                String.join(",", values));
+        try (PreparedStatement pstmt = ConnectionProvider.get(URL).prepareStatement(sql)) {
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("error took place while executing the command", e);
+
+        }
+    }
+
+    public void delete(K key) {
+        Class<T> beanClass = getBeanClass();
         T objToBeDeleted = getByKey(key);
-        String nameOfTable = getTableName(clazz);
+        String nameOfTable = getTableName(beanClass);
         List<String> primaryKeysCondition = new LinkedList<>();
-        for (java.lang.reflect.Field f : clazz.getDeclaredFields()) {
-            if (f.isAnnotationPresent(OneToMany.class)){
+        for (java.lang.reflect.Field f : beanClass.getDeclaredFields()) {
+            if (f.isAnnotationPresent(OneToMany.class)) {
                 Class linkedClassName = f.getAnnotation(OneToMany.class).linkedClassName();
                 Object valueForeignKey = getFieldValueFromObj(f, objToBeDeleted);
                 String nameFieldForeignKey = f.getAnnotation(OneToMany.class).fieldName();
@@ -146,7 +140,7 @@ public abstract class AbstractDAO<T, K> {
             }
         }
         String condition = String.join(" OR ", primaryKeysCondition);
-        String sql = String.format("DELETE FROM %s WHERE %s", nameOfTable,condition);
+        String sql = String.format("DELETE FROM %s WHERE %s", nameOfTable, condition);
         try (PreparedStatement pstmt = ConnectionProvider.get(URL).prepareStatement(sql)) {
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -165,6 +159,16 @@ public abstract class AbstractDAO<T, K> {
             e.printStackTrace();
         }
         return res;
+    }
+
+    public Class<T> getBeanClass() {
+        return (Class<T>) ((ParameterizedType) getClass()
+                .getGenericSuperclass()).getActualTypeArguments()[0];
+    }
+
+    public Class<K> getKeyClass() {
+        return (Class<K>) ((ParameterizedType) getClass()
+                .getGenericSuperclass()).getActualTypeArguments()[1];
     }
 }
 

@@ -28,15 +28,12 @@ public class Main {
 
         CountryDAO cd = new CountryDAO();
         CitiesDAO citiesDao = new CitiesDAO();
-        List<Country> countries = cd.getAll();
+        //List<Country> countries = cd.getAll();
 
-        citiesDao.insert(new Cities()
-                .setName("Yerevan")
-                .setAbbreviation("EVN")
-                .setCountryAbbreviation("AM"));
+        cd.getKeyClass();
 
         //Country c = new Country().setName("Sweden").setAbbreviation("SU").setCurrency("Krone").setLanguage("Swedish").setShengen(1);
-        cd.delete("SU");
+       // cd.delete("SU");
 
         int a  = 3;
     }

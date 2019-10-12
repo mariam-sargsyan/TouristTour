@@ -33,41 +33,23 @@ public class InitializerDB {
 
     }
 
-    public static <T> void insert(T objToInsert) {
-        Class<? extends T> clazz = (Class<? extends T>) objToInsert.getClass();
+    public static void deleteTable(String nameTable) {
 
-        String nameOfTable = "";
-        if (clazz.isAnnotationPresent(Table.class)) {
-            nameOfTable = clazz.getAnnotation(Table.class).tableName();
-        }
+        log.info(String.format("Deleting a table '%s'", nameTable));
 
-        List<String> columnsNames = new LinkedList<>();
-        List<String> values = new LinkedList<>();
-        for (java.lang.reflect.Field f : clazz.getDeclaredFields()) {
-            if (f.isAnnotationPresent(Field.class)) {
-                columnsNames.add(f.getAnnotation(Field.class).columnName());
-                try {
-                    f.setAccessible(true);
-                    Object objValue = f.get(objToInsert);
-                    values.add(String.format("'%s'", objValue.toString()));
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        String sql = String.format("DROP TABLE IF EXISTS %s;", nameTable);
 
-        log.info("Insertion started");
-        String sql = String.format("INSERT INTO %s (%s) VALUES(%s)", nameOfTable,
-                String.join(",", columnsNames),
-                String.join(",", values));
-        try (PreparedStatement pstmt = ConnectionProvider.get(URL).prepareStatement(sql)){
-            pstmt.executeUpdate();
+
+        try (Statement stmt = ConnectionProvider.get(URL).createStatement()) {
+            log.info("Deletion of the table has started");
+            stmt.executeUpdate(sql);
+            log.info("Finished");
         } catch (SQLException e) {
-            log.error("error took place while executing the command", e);
-
+            log.error("The problem ocurred on the stage of table deletion", e);
         }
-
     }
+
+
 
       public static List<Country> select(String nameTable, List<String> columnNames) {
         //String strColumnNames = String.join(",", columnNames);
