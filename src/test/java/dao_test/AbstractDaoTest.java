@@ -1,6 +1,8 @@
 package dao_test;
 
 import dao.InitializerDB;
+import dao_test.bean.TestBean;
+import dao_test.dao.TestDAO;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

@@ -6,6 +6,7 @@ import dao.annotations_dao.PrimaryKey;
 import dao.annotations_dao.Table;
 import org.apache.log4j.Logger;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,20 +14,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
+
+import static dao.ReflectionDAOUtils.*;
 
 public abstract class AbstractDAO<T, K> {
     private static final String URL = "jdbc:sqlite:C://Users/mariam.sargsyan/IdeaProjects/Databases/src/main/resources/tourist_tour_info.db";
     private static Logger log = Logger.getLogger(CountryDAO.class);
-
-
-    protected String getTableName(Class<T> clazz) {
-        String nameOfTable = "";
-        if (clazz.isAnnotationPresent(Table.class)) {
-            nameOfTable = clazz.getAnnotation(Table.class).tableName();
-        }
-        return nameOfTable;
-    }
 
     public abstract T getByKey(K key);
 
@@ -107,31 +102,16 @@ public abstract class AbstractDAO<T, K> {
         }
     }
 
-    public void delete(K key) {
-        Class<T> beanClass = getBeanClass();
-        T objToBeDeleted = getByKey(key);
+    private <S, R> void deleteWithCascade(Class<S> beanClass, R key, S objToBeDeleted) {
         String nameOfTable = getTableName(beanClass);
         List<String> primaryKeysCondition = new LinkedList<>();
         for (java.lang.reflect.Field f : beanClass.getDeclaredFields()) {
             if (f.isAnnotationPresent(OneToMany.class)) {
-                Class linkedClassName = f.getAnnotation(OneToMany.class).linkedClassName();
-                Object valueForeignKey = getFieldValueFromObj(f, objToBeDeleted);
-                String nameFieldForeignKey = f.getAnnotation(OneToMany.class).fieldName();
-                java.lang.reflect.Field fieldForeignKey = Stream.of(linkedClassName.getDeclaredFields())
-                        .filter(field -> field.isAnnotationPresent(Field.class) && field.getAnnotation(Field.class).columnName().equals(nameFieldForeignKey))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("Bad foreign key"));
-                java.lang.reflect.Field primaryKeyFieldLinkedClass = Stream.of(linkedClassName.getDeclaredFields())
-                        .filter(field -> field.isAnnotationPresent(PrimaryKey.class))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException(""));
-               /* getAll(linkedClassName).stream()
-                        .filter(linkedClassObject -> getFieldValueFromObj(fieldForeignKey, linkedClassObject).equals(valueForeignKey))
-                        .forEach(linkedClassObject -> delete(getFieldValueFromObj(primaryKeyFieldLinkedClass, linkedClassObject), linkedClassName));
-                 Есть аннотация OneToMany, и в ней нельзя параметризовать поле LinkedClassName
-                 Это ведет к проблемам в вызове delete выше */
+                Class clazzForeign = (Class)f.getType().getGenericSuperclass();
+                Class cascadeKeyClass = findFieldByAnnotation(clazzForeign, PrimaryKey.class).getType();
+                Set set = (Set)getFieldValueFromObj(f, objToBeDeleted);
+                set.forEach(field -> deleteWithCascade(clazzForeign, getFieldValueFromObj(findFieldByAnnotation(clazzForeign, PrimaryKey.class), field),field));
             }
-
             if (f.isAnnotationPresent(PrimaryKey.class)) {
                 primaryKeysCondition.add(String.format("%s = '%s'",
                         f.getAnnotation(Field.class).columnName(),
@@ -147,18 +127,12 @@ public abstract class AbstractDAO<T, K> {
             log.error("error took place while executing the command", e);
 
         }
-
     }
 
-    private Object getFieldValueFromObj(java.lang.reflect.Field objField, Object obj) {
-        Object res = null;
-        try {
-            objField.setAccessible(true);
-            res = objField.get(obj);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return res;
+    public void delete(K key) {
+        Class<T> beanClass = getBeanClass();
+        T objToBeDeleted = getByKey(key);
+        deleteWithCascade(beanClass, key, objToBeDeleted);
     }
 
     public Class<T> getBeanClass() {

@@ -1,12 +1,7 @@
 import dao.*;
-import dao.bean.Cities;
-import dao.bean.Country;
 import org.apache.log4j.Logger;
 
-import java.sql.*;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Main {

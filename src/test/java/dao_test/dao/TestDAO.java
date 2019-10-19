@@ -1,6 +1,7 @@
-package dao_test;
+package dao_test.dao;
 
 import dao.AbstractDAO;
+import dao_test.bean.TestBean;
 
 public class TestDAO extends AbstractDAO<TestBean, String> {
 

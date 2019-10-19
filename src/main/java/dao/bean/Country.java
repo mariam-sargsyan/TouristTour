@@ -5,6 +5,8 @@ import dao.annotations_dao.OneToMany;
 import dao.annotations_dao.PrimaryKey;
 import dao.annotations_dao.Table;
 
+import java.util.Set;
+
 @Table(tableName = "countries")
 public class Country {
 
@@ -20,10 +22,12 @@ public class Country {
     @Field(columnName = "shengen")
     private Integer shengen;
 
-    @OneToMany(linkedClassName = Cities.class, fieldName = "country_abbreviation" )
     @PrimaryKey
     @Field( columnName = "abbreviation")
     private String abbreviation;
+
+    @OneToMany(fieldName = "country_abbreviation" )
+    private Set<City> cities;
 
     public Country setName(String name) {
         this.name = name;
@@ -48,5 +52,13 @@ public class Country {
     public Country setAbbreviation(String abbreviation) {
         this.abbreviation = abbreviation;
         return this;
+    }
+
+    public Set<City> getCities() {
+        return cities;
+    }
+
+    public void setCities(Set<City> cities) {
+        this.cities = cities;
     }
 }

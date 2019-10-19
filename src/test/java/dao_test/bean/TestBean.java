@@ -1,4 +1,4 @@
-package dao_test;
+package dao_test.bean;
 
 import dao.annotations_dao.Field;
 import dao.annotations_dao.PrimaryKey;

@@ -1,14 +1,12 @@
 package dao;
 
-import dao.bean.Cities;
+import dao.bean.City;
 
-import java.util.List;
-
-public class CitiesDAO extends AbstractDAO <Cities, String>{
+public class CitiesDAO extends AbstractDAO <City, String>{
 
        @Override
-    public Cities getByKey(String key) {
-        return getByKey(key, new Cities());
+    public City getByKey(String key) {
+        return getByKey(key, new City());
     }
 
 }

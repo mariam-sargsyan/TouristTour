@@ -15,7 +15,7 @@ public class InitializerDB {
     private static Logger log = Logger.getLogger(InitializerDB.class);
 
     public static void createTable(String nameTable, List<String> listColumns) {
-
+        // TODO type of column
         log.info(String.format("Creating a table '%s'", nameTable));
 
         String sql = String.format("CREATE TABLE IF NOT EXISTS %s (%s);", nameTable,
