@@ -8,8 +8,6 @@ public class Main {
 
     private static Logger log = Logger.getLogger(Main.class);
 
-    private static final String URL = "jdbc:sqlite:C://Users/mariam.sargsyan/IdeaProjects/Databases/src/main/resources/tourist_tour_info.db";
-
     public static void main(String[] args) {
 
         List<String> columns = Arrays.asList("name TEXT",

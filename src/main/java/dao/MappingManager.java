@@ -1,14 +1,20 @@
 package dao;
 
+import org.apache.log4j.Logger;
+
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
+import static java.lang.String.format;
+
 public class MappingManager {
 
-    public <T> T mapResultSetToClass (ResultSet rs, T objToMap) {
+    private static Logger log = Logger.getLogger(MappingManager.class);
+
+    private  <T> T mapResultSetToClass (ResultSet rs, T objToMap) {
 
         Class<? extends T> clazz = (Class<? extends T>) objToMap.getClass();
 
@@ -19,7 +25,7 @@ public class MappingManager {
                     f.setAccessible(true);
                     f.set(objToMap, rs.getObject(columnName));
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    log.error(format("Problem with `%s` field of `%s` class", f.getName(), clazz.getName()), e);
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -28,13 +34,18 @@ public class MappingManager {
         return objToMap;
     }
 
-    public <T> List<T> mappingRows(ResultSet rs, Class<T> clazz) throws SQLException, IllegalAccessException, InstantiationException {
+    public <T> List<T> mappingRows(ResultSet rs, Class<T> clazz) {
         List<T> result = new LinkedList<>();
-        while (rs.next()){
-            T object= clazz.newInstance();
-            mapResultSetToClass(rs,object);
-            result.add(object);
-
+        try {
+            while (rs.next()) {
+                T object = clazz.getDeclaredConstructor().newInstance();
+                mapResultSetToClass(rs, object);
+                result.add(object);
+            }
+        } catch (ReflectiveOperationException e) {
+            log.error(format("Instance of `%s` class was not created", clazz.getName()), e);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return result;
     }

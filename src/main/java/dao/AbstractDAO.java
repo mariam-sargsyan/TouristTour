@@ -3,15 +3,10 @@ package dao;
 import dao.annotations_dao.Field;
 import dao.annotations_dao.OneToMany;
 import dao.annotations_dao.PrimaryKey;
-import dao.annotations_dao.Table;
 import org.apache.log4j.Logger;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +15,7 @@ import java.util.stream.Stream;
 import static dao.ReflectionDAOUtils.*;
 
 public abstract class AbstractDAO<T, K> {
-    private static final String URL = "jdbc:sqlite:C://Users/mariam.sargsyan/IdeaProjects/Databases/src/main/resources/tourist_tour_info.db";
+
     private static Logger log = Logger.getLogger(CountryDAO.class);
 
     public abstract T getByKey(K key);
@@ -34,23 +29,11 @@ public abstract class AbstractDAO<T, K> {
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Primary Key is not found in %s class", foundObjectClass.getName())))
                 .getAnnotation(Field.class).columnName();
         String sql = String.format("SELECT * FROM %s WHERE %s = '%s'", nameOfTable, primaryKey, key);
-
-        try (Statement stmnt = ConnectionProvider.get(URL).createStatement()) {
-            ResultSet rs = stmnt.executeQuery(sql);
-
-            try {
-                foundObject = new MappingManager().mappingRows(rs, (Class<T>) foundObject.getClass())
-                        .stream()
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException());
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        ResultSet rs = QueryExecutor.executeAndGet(sql);
+        foundObject = new MappingManager().mappingRows(rs, (Class<T>) foundObject.getClass())
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException());
         return foundObject;
     }
 
@@ -60,23 +43,10 @@ public abstract class AbstractDAO<T, K> {
         String sql = String.format("SELECT * FROM %s", nameOfTable);
         List<T> beanObjectsList = new LinkedList<T>();
 
-        try (Statement stmnt = ConnectionProvider.get(URL).createStatement()) {
-            ResultSet rs = stmnt.executeQuery(sql);
-
-            try {
-                beanObjectsList = new MappingManager().mappingRows(rs, beanClass);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        ResultSet rs = QueryExecutor.executeAndGet(sql);
+        beanObjectsList = new MappingManager().mappingRows(rs, beanClass);
         return beanObjectsList;
     }
-
-    ;
 
     public void insert(T value) {
         Class<T> beanClass = getBeanClass();
@@ -94,12 +64,7 @@ public abstract class AbstractDAO<T, K> {
         String sql = String.format("INSERT INTO %s (%s) VALUES(%s)", nameOfTable,
                 String.join(",", columnsNames),
                 String.join(",", values));
-        try (PreparedStatement pstmt = ConnectionProvider.get(URL).prepareStatement(sql)) {
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            log.error("error took place while executing the command", e);
-
-        }
+        QueryExecutor.execute(sql);
     }
 
     private <S, R> void deleteWithCascade(Class<S> beanClass, R key, S objToBeDeleted) {
@@ -121,12 +86,7 @@ public abstract class AbstractDAO<T, K> {
         }
         String condition = String.join(" OR ", primaryKeysCondition);
         String sql = String.format("DELETE FROM %s WHERE %s", nameOfTable, condition);
-        try (PreparedStatement pstmt = ConnectionProvider.get(URL).prepareStatement(sql)) {
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            log.error("error took place while executing the command", e);
-
-        }
+        QueryExecutor.execute(sql);
     }
 
     public void delete(K key) {
