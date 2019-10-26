@@ -29,7 +29,7 @@ public class QueryExecutor {
         } catch (IOException e) {
             log.error("Problem with loading of db.properties", e);
         }
-        URL = format("jdbs:%s:%s", properties.get("db.rdbms"), properties.get("dp.path"));
+        URL = format("jdbs:%s:%s", properties.get("db.rdbms"), properties.get("db.path"));
     }
 
     public static ResultSet executeAndGet(String sqlQuery) {
