@@ -3,9 +3,9 @@ package dao_test.dao;
 import dao.AbstractDAO;
 import dao_test.bean.OneToManyBean;
 
-public class OneToManyDao extends AbstractDAO<OneToManyBean, String> {
+public class OneToManyDao extends AbstractDAO<OneToManyBean, Integer> {
     @Override
-    public OneToManyBean getByKey(String key) {
+    public OneToManyBean getByKey(Integer key) {
         return getByKey(key, new OneToManyBean());
     }
 }

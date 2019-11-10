@@ -22,7 +22,7 @@ public class QueryExecutor {
     }
 
     private static void loadDbURL() {
-        InputStream inputStream = QueryExecutor.class.getResourceAsStream("db.properties");
+        InputStream inputStream = QueryExecutor.class.getResourceAsStream("/db.properties");
         Properties properties = new Properties();
         try {
             properties.load(inputStream);

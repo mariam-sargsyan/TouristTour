@@ -10,16 +10,16 @@ public class ManyToOneBean {
 
     @PrimaryKey
     @Field(columnName = "id_column")
-    private String idColumn;
+    private Integer idColumn;
 
     @ManyToOne(fieldName = "foreign_key")
     private OneToManyBean oneToManyBean;
 
-    public String getIdColumn() {
+    public Integer getIdColumn() {
         return idColumn;
     }
 
-    public void setIdColumn(String idColumn) {
+    public void setIdColumn(Integer idColumn) {
         this.idColumn = idColumn;
     }
 

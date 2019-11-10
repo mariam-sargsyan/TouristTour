@@ -4,9 +4,9 @@ import dao.AbstractDAO;
 import dao_test.bean.ManyToOneBean;
 import dao_test.bean.TestBean;
 
-public class ManyToOneDao extends AbstractDAO<ManyToOneBean, String> {
+public class ManyToOneDao extends AbstractDAO<ManyToOneBean, Integer> {
     @Override
-    public ManyToOneBean getByKey(String key) {
+    public ManyToOneBean getByKey(Integer key) {
         return getByKey(key, new ManyToOneBean());
     }
 }

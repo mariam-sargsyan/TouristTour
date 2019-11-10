@@ -39,7 +39,6 @@ public class AbstractDaoTest {
     @After
     public void tearDown() {
         InitializerDB.deleteTable(nameTestTable);
-
     }
 
 }

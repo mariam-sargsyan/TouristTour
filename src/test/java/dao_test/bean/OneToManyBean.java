@@ -12,16 +12,16 @@ public class OneToManyBean {
 
     @PrimaryKey
     @Field(columnName = "id_column")
-    private String idColumn;
+    private Integer idColumn;
 
     @OneToMany(fieldName = "foreign_key")
     private Set<ManyToOneBean> manyToOneBeans;
 
-    public String getIdColumn() {
+    public Integer getIdColumn() {
         return idColumn;
     }
 
-    public void setIdColumn(String idColumn) {
+    public void setIdColumn(Integer idColumn) {
         this.idColumn = idColumn;
     }
 
