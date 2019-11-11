@@ -29,7 +29,8 @@ public class QueryExecutor {
         } catch (IOException e) {
             log.error("Problem with loading of db.properties", e);
         }
-        URL = format("jdbs:%s:%s", properties.get("db.rdbms"), properties.get("db.path"));
+        String currentDir = System.getProperty("user.dir").replace('\\', '/');
+        URL = format("jdbc:%s:%s/%s", properties.get("db.rdbms"), currentDir,properties.get("db.path"));
     }
 
     public static ResultSet executeAndGet(String sqlQuery) {
