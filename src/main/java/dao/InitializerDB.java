@@ -19,7 +19,7 @@ public class InitializerDB {
 
         String sql = format("CREATE TABLE IF NOT EXISTS %s (%s);", nameTable,
                 String.join(", ", listColumns));
-        log.info("Creation of the `%s` table has started");
+        log.info(format("Creation of the `%s` table has started", nameTable));
         QueryExecutor.execute(sql);
         log.info("Finished");
     }
@@ -31,16 +31,6 @@ public class InitializerDB {
         log.info("Deletion of the table has started");
         QueryExecutor.execute(sql);
         log.info("Finished");
-    }
-
-    public static List<Country> select(String nameTable, List<String> columnNames) {
-        //String strColumnNames = String.join(",", columnNames);
-        // String sql = String.format("SELECT %s FROM %s",strColumnNames,nameTable ) ;
-        String sql = format("SELECT * FROM %s", nameTable);
-        List<Country> country = new LinkedList<Country>();
-        ResultSet rs = QueryExecutor.executeAndGet(sql);
-        country = new MappingManager().mappingRows(rs, Country.class);
-        return country;
     }
 
 }

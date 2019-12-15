@@ -20,38 +20,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractDaoTablesRelationsTest {
 
-    private static final List<String> oneToManyListOfColumns = Collections.singletonList("id_column INTEGER PRIMARY KEY");
+    private static final List<String> oneToManyListOfColumns = Collections.singletonList("id_column integer PRIMARY KEY");
     private static final List<String> manyToOneListOfColumns = Arrays.asList(
-            "id_column INTEGER PRIMARY KEY",
-            "foreign_key INTEGER",
-            "FOREIGN KEY (foreign_key) REFERENCES one_to_many_table (id_column)");
+            "id_column integer PRIMARY KEY",
+            "foreign_key integer REFERENCES one_to_many_table (id_column)");
     private static final String oneToManyTable = "one_to_many_table";
     private static final String manyToOneTable = "many_to_one_table";
 
     @Before
     public void preparation() {
         InitializerDB.createTable(oneToManyTable, oneToManyListOfColumns);
-        InitializerDB.createTable(manyToOneTable, oneToManyListOfColumns);
-
+        InitializerDB.createTable(manyToOneTable, manyToOneListOfColumns);
     }
 
     @Test
     public void testForCascadeDelete() {
         OneToManyBean oneToManyBean = new OneToManyBean();
         oneToManyBean.setIdColumn(25);
-        oneToManyBean.setManyToOneBeans(new HashSet<>());
+        oneToManyBean.setManyToOneBeans(new HashSet());
 
         ManyToOneBean manyToOneBean1 = new ManyToOneBean();
         manyToOneBean1.setIdColumn(1);
         manyToOneBean1.setOneToManyBean(oneToManyBean);
 
         ManyToOneBean manyToOneBean2 = new ManyToOneBean();
-        manyToOneBean1.setIdColumn(2);
-        manyToOneBean1.setOneToManyBean(oneToManyBean);
+        manyToOneBean2.setIdColumn(2);
+        manyToOneBean2.setOneToManyBean(oneToManyBean);
 
         ManyToOneBean manyToOneBean3 = new ManyToOneBean();
-        manyToOneBean1.setIdColumn(3);
-        manyToOneBean1.setOneToManyBean(oneToManyBean);
+        manyToOneBean3.setIdColumn(3);
+        manyToOneBean3.setOneToManyBean(oneToManyBean);
 
 
         oneToManyBean.getManyToOneBeans().add(manyToOneBean1);

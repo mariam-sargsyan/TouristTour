@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Properties;
 
 import static java.lang.String.format;
@@ -29,20 +30,20 @@ public class QueryExecutor {
         } catch (IOException e) {
             log.error("Problem with loading of db.properties", e);
         }
-        String currentDir = System.getProperty("user.dir").replace('\\', '/');
-        URL = format("jdbc:%s:%s/%s", properties.get("db.rdbms"), currentDir,properties.get("db.path"));
+        URL = format("jdbc:%s:%s", properties.get("db.rdbms"),properties.get("db.database_name"));
     }
 
-    public static ResultSet executeAndGet(String sqlQuery) {
+    public static <T> List<T> executeAndGet(String sqlQuery, Class<T> beanClass) {
         log.info(format("Start executing: %s", sqlQuery));
-        ResultSet result = null;
+        List<T> rows = null;
         try (Statement stmnt = ConnectionProvider.get(URL).createStatement()) {
-            result = stmnt.executeQuery(sqlQuery);
+            ResultSet result = stmnt.executeQuery(sqlQuery);
             log.info(format("Executing successfully finished with result object", sqlQuery));
+            rows = new MappingManager().mappingRows(result, beanClass);
         } catch (SQLException e) {
             log.error(format("Problem with executing `%s`", sqlQuery), e);
         }
-        return result;
+        return rows;
     }
 
     public static void execute(String sqlQuery) {

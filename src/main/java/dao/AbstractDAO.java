@@ -18,6 +18,11 @@ public abstract class AbstractDAO<T, K> {
 
     private static Logger log = Logger.getLogger(CountryDAO.class);
 
+    public static List<Object> execute (String sqlQuery){
+        return QueryExecutor.executeAndGet(sqlQuery, Object.class);
+
+    }
+
     public abstract T getByKey(K key);
 
     protected T getByKey(K key, T foundObject) {
@@ -29,8 +34,7 @@ public abstract class AbstractDAO<T, K> {
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Primary Key is not found in %s class", foundObjectClass.getName())))
                 .getAnnotation(Field.class).columnName();
         String sql = String.format("SELECT * FROM %s WHERE %s = '%s'", nameOfTable, primaryKey, key);
-        ResultSet rs = QueryExecutor.executeAndGet(sql);
-        foundObject = new MappingManager().mappingRows(rs, (Class<T>) foundObject.getClass())
+        foundObject = QueryExecutor.executeAndGet(sql,(Class<T>) foundObject.getClass())
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException());
@@ -40,11 +44,9 @@ public abstract class AbstractDAO<T, K> {
     public List<T> getAll() {
         Class<T> beanClass = getBeanClass();
         String nameOfTable = getTableName(beanClass);
-        String sql = String.format("SELECT * FROM %s", nameOfTable);
-        List<T> beanObjectsList = new LinkedList<T>();
+        String sql = String.format("SELECT * FROM %s;", nameOfTable);
 
-        ResultSet rs = QueryExecutor.executeAndGet(sql);
-        beanObjectsList = new MappingManager().mappingRows(rs, beanClass);
+        List<T> beanObjectsList = QueryExecutor.executeAndGet(sql, beanClass);
         return beanObjectsList;
     }
 
@@ -72,7 +74,7 @@ public abstract class AbstractDAO<T, K> {
         List<String> primaryKeysCondition = new LinkedList<>();
         for (java.lang.reflect.Field f : beanClass.getDeclaredFields()) {
             if (f.isAnnotationPresent(OneToMany.class)) {
-                Class clazzForeign = (Class)f.getType().getGenericSuperclass();
+                Class clazzForeign = (Class) ((ParameterizedType)f.getAnnotatedType().getType()).getActualTypeArguments()[0];
                 Class cascadeKeyClass = findFieldByAnnotation(clazzForeign, PrimaryKey.class).getType();
                 Set set = (Set)getFieldValueFromObj(f, objToBeDeleted);
                 set.forEach(field -> deleteWithCascade(clazzForeign, getFieldValueFromObj(findFieldByAnnotation(clazzForeign, PrimaryKey.class), field),field));

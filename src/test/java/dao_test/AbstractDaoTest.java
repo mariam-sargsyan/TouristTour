@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractDaoTest {
 
-    private static final List<String> listOfColumns = Collections.singletonList("test_column");
+    private static final List<String> listOfColumns = Collections.singletonList("test_column text");
     private static final String nameTestTable = "test_table";
 
 
